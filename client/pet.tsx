@@ -1,13 +1,16 @@
 import { getPaseoClient, useHosts, type PluginSidebarItemProps } from "@getpaseo/plugin/client";
 import { SidebarRow } from "@getpaseo/plugin/client/ui";
 import { useEffect, useState } from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
+
+const WALK = 40;
+const WALK_STEPS = 8;
 
 type Mood = "sleep" | "work" | "call" | "purr";
 
 const FRAMES: Record<Mood, string[]> = {
   sleep: ["😺💤", "😸 z", "😺 zZ"],
-  work: ["🐈 ", " 🐈", "  🐈", " 🐈"],
+  work: ["🐈"],
   call: ["🙀❗", "😾❗"],
   purr: ["😻💕", "😽💕"],
 };
@@ -61,19 +64,34 @@ export function PetItem({ theme }: PluginSidebarItemProps) {
   const [tick, setTick] = useState(0);
   const mood: Mood = Date.now() < pettedUntil ? "purr" : agentMood;
   useEffect(() => {
-    const timer = setInterval(() => setTick((t) => t + 1), mood === "sleep" ? 1200 : 350);
+    const timer = setInterval(() => setTick((t) => t + 1), mood === "sleep" ? 1200 : mood === "work" ? 150 : 350);
     return () => clearInterval(timer);
   }, [mood]);
   const frames = FRAMES[mood];
+  // Walks 0..WALK px and back; the emoji faces left, so it is mirrored on the way right.
+  const step = tick % (2 * WALK_STEPS);
+  const goingRight = step < WALK_STEPS;
+  const offset = mood === "work" ? (goingRight ? step : 2 * WALK_STEPS - step) * (WALK / WALK_STEPS) : 0;
   return (
     <SidebarRow
       icon="Cat"
       label={LABEL[mood](count)}
       onPress={() => setPettedUntil(Date.now() + 2500)}
       trailing={
-        <Text style={{ color: theme.colors.foreground, fontSize: 26, lineHeight: 30, marginRight: 8, minWidth: 72 }}>
-          {frames[tick % frames.length]}
-        </Text>
+        <View style={{ width: 72 + WALK, marginRight: 8 }}>
+          <Text
+            style={{
+              color: theme.colors.foreground,
+              fontSize: 26,
+              lineHeight: 30,
+              alignSelf: "flex-start",
+              marginLeft: offset,
+              transform: mood === "work" && goingRight ? [{ scaleX: -1 }] : [],
+            }}
+          >
+            {frames[tick % frames.length]}
+          </Text>
+        </View>
       }
     />
   );
