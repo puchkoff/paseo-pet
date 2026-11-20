@@ -1,4 +1,4 @@
-import { usePaseo, type PluginSidebarItemProps } from "@getpaseo/plugin/client";
+import { getPaseoClient, useHosts, type PluginSidebarItemProps } from "@getpaseo/plugin/client";
 import { SidebarRow } from "@getpaseo/plugin/client/ui";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
@@ -20,17 +20,23 @@ const LABEL: Record<Mood, (n: number) => string> = {
 };
 
 function useAgentMood(): { mood: Exclude<Mood, "purr">; count: number } {
-  const paseo = usePaseo();
+  const hosts = useHosts();
+  // getPaseoClient borrows the app's connection, so the cat sees agents on every host.
+  const online = hosts.filter((h) => h.status === "online").map((h) => h.serverId).join(",");
   const [state, setState] = useState<{ mood: Exclude<Mood, "purr">; count: number }>({ mood: "sleep", count: 0 });
   useEffect(() => {
     let alive = true;
     const poll = async () => {
       try {
-        const { entries } = await paseo.agents.list({
-          filter: { statuses: ["running", "idle"], includeArchived: false },
-          page: { limit: 200 },
-        });
-        const agents = entries.map((e) => e.agent).filter((a) => !a.archivedAt);
+        const lists = await Promise.all(
+          online.split(",").filter(Boolean).map((id) =>
+            getPaseoClient(id)
+              .agents.list({ filter: { statuses: ["running", "idle"], includeArchived: false }, page: { limit: 200 } })
+              .then((r) => r.entries.map((e) => e.agent))
+              .catch(() => []),
+          ),
+        );
+        const agents = lists.flat().filter((a) => !a.archivedAt);
         const calling = agents.filter((a) => a.pendingPermissions.length > 0).length;
         const working = agents.filter((a) => a.status === "running").length;
         if (!alive) return;
@@ -45,7 +51,7 @@ function useAgentMood(): { mood: Exclude<Mood, "purr">; count: number } {
       alive = false;
       clearInterval(timer);
     };
-  }, [paseo]);
+  }, [online]);
   return state;
 }
 
