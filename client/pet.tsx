@@ -6,7 +6,6 @@ import {
   type PluginSidebarItemProps,
   type PluginSurfaceProps,
 } from "@getpaseo/plugin/client";
-import type { PaseoApi } from "@getpaseo/client";
 import { SidebarRow } from "@getpaseo/plugin/client/ui";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -40,7 +39,7 @@ export interface PetAgent {
   needsYou: boolean;
 }
 
-type Agent = Awaited<ReturnType<PaseoApi["agents"]["list"]>>["entries"][number]["agent"];
+type Agent = Awaited<ReturnType<ReturnType<typeof getPaseoClient>["agents"]["list"]>>["entries"][number]["agent"];
 
 // Running agents plus, for a workspace that is working with no running agent (background
 // subagents), its latest agent — the same set as paseo-running/shared/running.ts.
