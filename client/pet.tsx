@@ -31,17 +31,27 @@ function useAgentMood(): { mood: Exclude<Mood, "purr">; count: number } {
     let alive = true;
     const poll = async () => {
       try {
-        const lists = await Promise.all(
-          online.split(",").filter(Boolean).map((id) =>
-            getPaseoClient(id)
-              .agents.list({ filter: { statuses: ["running", "idle"], includeArchived: false }, page: { limit: 200 } })
-              .then((r) => r.entries.map((e) => e.agent))
-              .catch(() => []),
-          ),
+        // Counts working workspaces like the sidebar's "Working": a workspace stays working while
+        // background subagents run after its agent's turn ended.
+        const perHost = await Promise.all(
+          online.split(",").filter(Boolean).map(async (id) => {
+            const paseo = getPaseoClient(id);
+            try {
+              const [agents, workspaces] = await Promise.all([
+                paseo.agents.list({ filter: { statuses: ["running", "idle"], includeArchived: false }, page: { limit: 200 } }),
+                paseo.workspaces.list(),
+              ]);
+              return {
+                calling: agents.entries.filter((e) => !e.agent.archivedAt && e.agent.pendingPermissions.length > 0).length,
+                working: workspaces.entries.filter((w) => w.status === "running").length,
+              };
+            } catch {
+              return { calling: 0, working: 0 };
+            }
+          }),
         );
-        const agents = lists.flat().filter((a) => !a.archivedAt);
-        const calling = agents.filter((a) => a.pendingPermissions.length > 0).length;
-        const working = agents.filter((a) => a.status === "running").length;
+        const calling = perHost.reduce((n, h) => n + h.calling, 0);
+        const working = perHost.reduce((n, h) => n + h.working, 0);
         if (!alive) return;
         setState(calling ? { mood: "call", count: calling } : working ? { mood: "work", count: working } : { mood: "sleep", count: 0 });
       } catch {
