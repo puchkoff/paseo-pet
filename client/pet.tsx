@@ -71,7 +71,7 @@ export function PetItem({ theme }: PluginSidebarItemProps) {
       label={LABEL[mood](count)}
       onPress={() => setPettedUntil(Date.now() + 2500)}
       trailing={
-        <Text style={{ color: theme.colors.foreground, fontSize: 15, marginRight: 8, minWidth: 44 }}>
+        <Text style={{ color: theme.colors.foreground, fontSize: 26, lineHeight: 30, marginRight: 8, minWidth: 72 }}>
           {frames[tick % frames.length]}
         </Text>
       }
