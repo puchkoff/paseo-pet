@@ -74,7 +74,7 @@ export function PetItem({ theme }: PluginSidebarItemProps) {
   const [tick, setTick] = useState(0);
   const mood: Mood = Date.now() < pettedUntil ? "purr" : agentMood;
   useEffect(() => {
-    const timer = setInterval(() => setTick((t) => t + 1), mood === "sleep" ? 1200 : mood === "work" ? 150 : 350);
+    const timer = setInterval(() => setTick((t) => t + 1), mood === "sleep" ? 1200 : mood === "work" ? 300 : 350);
     return () => clearInterval(timer);
   }, [mood]);
   const frames = FRAMES[mood];
