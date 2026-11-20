@@ -1,0 +1,1 @@
+A cat in the sidebar footer that mirrors your agents. It sleeps when every agent is idle, runs while any agent is working, and waves when an agent waits for a permission. Pressing it pets the cat. Client-only: it reads the agent list of the selected host every few seconds and sends nothing anywhere.

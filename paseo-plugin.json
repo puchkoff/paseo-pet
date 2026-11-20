@@ -1,0 +1,6 @@
+{
+  "id": "paseo-pet",
+  "requirements": { "paseo": ">=0.11.4" },
+  "name": "Pet",
+  "description": "A sidebar cat that sleeps, works, and calls you along with your agents."
+}
