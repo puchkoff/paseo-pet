@@ -1,1 +1,5 @@
-A cat in the sidebar footer that mirrors your agents. It sleeps when every agent is idle, runs while any agent is working, and waves when an agent waits for a permission. Pressing it pets the cat. Client-only: it reads the agent list of the selected host every few seconds and sends nothing anywhere.
+A cat in the sidebar footer that mirrors your agents. It sleeps when nothing runs, walks back and forth while agents work, and waves when an agent waits for a permission. Its label counts the agents it is watching.
+
+Click the cat to see the working agents with their workspace and host, then click one to open it. It covers every connected host.
+
+The plugin runs in the app only. Every 3 seconds it reads the agent and workspace lists of each online host and sends nothing anywhere else.

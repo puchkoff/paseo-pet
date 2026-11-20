@@ -6,7 +6,9 @@
     "paseo-plugin.json",
     "OVERVIEW.md",
     "index.client.tsx",
-    "client/"
+    "client/",
+    "assets/",
+    "docs/"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit"
@@ -20,5 +22,6 @@
     "typescript": "^5.9.3",
     "zod": "^4.4.3",
     "@types/node": "^22.0.0"
-  }
+  },
+  "license": "MIT"
 }
