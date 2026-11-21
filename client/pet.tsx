@@ -113,9 +113,9 @@ function AgentsPopover({ theme, close, openScreen, ...rest }: PluginPopoverProps
     else openScreen({ screenId: "go", params: { agentId: a.agentId, serverId: a.serverId } });
   };
   return (
-    <ScrollView style={{ maxHeight: 420, backgroundColor: theme.colors.surface0 }} contentContainerStyle={{ padding: 8, gap: 2 }}>
+    <ScrollView style={{ width: "100%", minWidth: 320, alignSelf: "stretch", maxHeight: 520, backgroundColor: theme.colors.surface0 }} contentContainerStyle={{ padding: 8, gap: 2 }}>
       {agents.length === 0 ? (
-        <Text style={{ color: theme.colors.foregroundMuted, padding: 8 }}>The cat is asleep: no agents working.</Text>
+        <Text style={{ color: theme.colors.foregroundMuted, fontSize: 16, padding: 8 }}>The cat is asleep: no agents working.</Text>
       ) : (
         agents.map((a) => (
           <Pressable
@@ -123,13 +123,13 @@ function AgentsPopover({ theme, close, openScreen, ...rest }: PluginPopoverProps
             accessibilityRole="button"
             accessibilityLabel={`Open agent ${a.title}`}
             onPress={() => go(a)}
-            style={({ pressed }) => ({ padding: 8, borderRadius: 8, backgroundColor: pressed ? theme.colors.surface2 : "transparent" })}
+            style={({ pressed }) => ({ padding: 10, borderRadius: 8, backgroundColor: pressed ? theme.colors.surface2 : "transparent" })}
           >
-            <Text style={{ color: theme.colors.foreground, fontSize: 14 }} numberOfLines={1}>
+            <Text style={{ color: theme.colors.foreground, fontSize: 17, lineHeight: 22 }} numberOfLines={1}>
               {a.needsYou ? "❗ " : "🐾 "}
               {a.title}
             </Text>
-            <Text style={{ color: theme.colors.foregroundMuted, fontSize: 12 }} numberOfLines={1}>
+            <Text style={{ color: theme.colors.foregroundMuted, fontSize: 15, lineHeight: 20 }} numberOfLines={1}>
               {[a.workspace, a.hostLabel].filter(Boolean).join(" · ")}
             </Text>
           </Pressable>
