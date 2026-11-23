@@ -4,7 +4,7 @@
     "paseo": ">=0.11.4"
   },
   "name": "Pet",
-  "description": "A sidebar pet (Rottweiler or cat) that sleeps, works, and calls you along with your agents.",
+  "description": "A sidebar cat that sleeps, works, and calls you along with your agents.",
   "icon": "assets/icon.png",
   "media": [
     "docs/screenshot.png"

@@ -2,13 +2,13 @@
 
 <h1 align="center">Pet</h1>
 
-<p align="center">A pet (Rottweiler or cat) in the <a href="https://paseo.sh">Paseo</a> sidebar that mirrors your agents.</p>
+<p align="center">A cat in the <a href="https://paseo.sh">Paseo</a> sidebar that mirrors your agents.</p>
 
 ![Pet in the Paseo sidebar with its agent list open (mockup with sample data)](docs/screenshot.png)
 
-The pet sleeps when nothing runs, walks back and forth while agents work, and waves when one of them needs your permission. Its label counts the agents it is watching.
+The cat sleeps when nothing runs, walks back and forth while agents work, and waves when one of them needs your permission. Its label counts the agents it is watching.
 
-Click the pet to open the list of working agents. Each row shows the agent, its workspace and its host. Click a row to open that agent in its workspace, on any connected host. Pick Rottweiler or cat at the top of that list; the choice is saved.
+Click the cat to open the list of working agents. Each row shows the agent, its workspace and its host. Click a row to open that agent in its workspace, on any connected host.
 
 The plugin runs in the app only. Every 3 seconds it reads the agent and workspace lists of each online host through the app's own connection and sends nothing anywhere else.
 
