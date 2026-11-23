@@ -15,19 +15,77 @@ const WALK_STEPS = 16;
 
 type Mood = "sleep" | "work" | "call" | "purr";
 
-const FRAMES: Record<Mood, string[]> = {
-  sleep: ["😺💤", "😸 z", "😺 zZ"],
-  work: ["🐈"],
-  call: ["🙀❗", "😾❗"],
-  purr: ["😻💕", "😽💕"],
-};
+interface Pet {
+  name: string;
+  icon: string;
+  frames: Record<Mood, string[]>;
+  purr: string;
+}
 
-const LABEL: Record<Mood, (n: number) => string> = {
-  sleep: () => "Cat is asleep",
-  work: (n) => `Cat helps ${n} agent${n === 1 ? "" : "s"}`,
-  call: (n) => `${n} agent${n === 1 ? " needs" : "s need"} you!`,
-  purr: () => "Purr…",
-};
+// Walking emoji must face left: they are mirrored on the way right.
+const PETS = {
+  cat: {
+    name: "Cat",
+    icon: "Cat",
+    frames: {
+      sleep: ["😺💤", "😸 z", "😺 zZ"],
+      work: ["🐈"],
+      call: ["🙀❗", "😾❗"],
+      purr: ["😻💕", "😽💕"],
+    },
+    purr: "Purr…",
+  },
+  rottweiler: {
+    name: "Rottweiler",
+    icon: "Dog",
+    frames: {
+      sleep: ["🐶💤", "🐶 z", "🐶 zZ"],
+      work: ["🐕"],
+      call: ["🐕❗", "🐶❗"],
+      purr: ["🐶💕", "🐕💕"],
+    },
+    purr: "Woof!",
+  },
+} satisfies Record<string, Pet>;
+
+type PetKind = keyof typeof PETS;
+const STORAGE_KEY = "paseo-pet:kind";
+
+// localStorage is missing on native, so the choice there lasts until reload.
+function loadKind(): PetKind {
+  try {
+    const v = globalThis.localStorage?.getItem(STORAGE_KEY);
+    if (v && v in PETS) return v as PetKind;
+  } catch {}
+  return "rottweiler";
+}
+
+let kind = loadKind();
+const listeners = new Set<(k: PetKind) => void>();
+
+function setKind(k: PetKind) {
+  kind = k;
+  try {
+    globalThis.localStorage?.setItem(STORAGE_KEY, k);
+  } catch {}
+  for (const l of listeners) l(k);
+}
+
+function usePetKind(): PetKind {
+  const [k, setK] = useState(kind);
+  useEffect(() => {
+    listeners.add(setK);
+    return () => void listeners.delete(setK);
+  }, []);
+  return k;
+}
+
+function label(pet: Pet, mood: Mood, n: number): string {
+  if (mood === "sleep") return `${pet.name} is asleep`;
+  if (mood === "work") return `${pet.name} helps ${n} agent${n === 1 ? "" : "s"}`;
+  if (mood === "call") return `${n} agent${n === 1 ? " needs" : "s need"} you!`;
+  return pet.purr;
+}
 
 export interface PetAgent {
   key: string;
@@ -78,7 +136,7 @@ async function hostAgents(serverId: string, hostLabel: string): Promise<PetAgent
 
 function usePetAgents(): PetAgent[] {
   const hosts = useHosts();
-  // getPaseoClient borrows the app's connection, so the cat sees agents on every host.
+  // getPaseoClient borrows the app's connection, so the pet sees agents on every host.
   const online = hosts.filter((h) => h.status === "online").map((h) => `${h.serverId}\t${h.label}`).join("\n");
   const [agents, setAgents] = useState<PetAgent[]>([]);
   useEffect(() => {
@@ -105,6 +163,7 @@ function usePetAgents(): PetAgent[] {
 
 function AgentsPopover({ theme, close, openScreen, ...rest }: PluginPopoverProps) {
   const agents = usePetAgents();
+  const current = usePetKind();
   // Popover props carry no navigation in the SDK types; fall back to the redirect screen.
   const navigation = (rest as Partial<PluginSurfaceProps>).navigation;
   const go = (a: PetAgent) => {
@@ -114,8 +173,23 @@ function AgentsPopover({ theme, close, openScreen, ...rest }: PluginPopoverProps
   };
   return (
     <ScrollView style={{ width: "100%", minWidth: 320, alignSelf: "stretch", maxHeight: 520, backgroundColor: theme.colors.surface0 }} contentContainerStyle={{ padding: 8, gap: 2 }}>
+      <View style={{ flexDirection: "row", gap: 6, padding: 8 }}>
+        {(Object.keys(PETS) as PetKind[]).map((k) => (
+          <Pressable
+            key={k}
+            accessibilityRole="button"
+            accessibilityState={{ selected: k === current }}
+            onPress={() => setKind(k)}
+            style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: k === current ? theme.colors.surface2 : "transparent" }}
+          >
+            <Text style={{ color: theme.colors.foreground, fontSize: 15 }}>
+              {PETS[k].frames.work[0]} {PETS[k].name}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
       {agents.length === 0 ? (
-        <Text style={{ color: theme.colors.foregroundMuted, fontSize: 16, padding: 8 }}>The cat is asleep: no agents working.</Text>
+        <Text style={{ color: theme.colors.foregroundMuted, fontSize: 16, padding: 8 }}>The {PETS[current].name} is asleep: no agents working.</Text>
       ) : (
         agents.map((a) => (
           <Pressable
@@ -149,6 +223,7 @@ export function GoScreen({ params, navigation, theme }: PluginScreenProps) {
 
 export function PetItem({ theme, openPopover }: PluginSidebarItemProps) {
   const agents = usePetAgents();
+  const pet: Pet = PETS[usePetKind()];
   const calling = agents.filter((a) => a.needsYou).length;
   const agentMood: Exclude<Mood, "purr"> = calling ? "call" : agents.length ? "work" : "sleep";
   const count = calling || agents.length;
@@ -159,15 +234,15 @@ export function PetItem({ theme, openPopover }: PluginSidebarItemProps) {
     const timer = setInterval(() => setTick((t) => t + 1), mood === "sleep" ? 1200 : mood === "work" ? 150 : 350);
     return () => clearInterval(timer);
   }, [mood]);
-  const frames = FRAMES[mood];
-  // Walks 0..WALK px and back; the emoji faces left, so it is mirrored on the way right.
+  const frames = pet.frames[mood];
+  // Walks 0..WALK px and back.
   const step = tick % (2 * WALK_STEPS);
   const goingRight = step < WALK_STEPS;
   const offset = mood === "work" ? (goingRight ? step : 2 * WALK_STEPS - step) * (WALK / WALK_STEPS) : 0;
   return (
     <SidebarRow
-      icon="Cat"
-      label={LABEL[mood](count)}
+      icon={pet.icon}
+      label={label(pet, mood, count)}
       onPress={() => {
         setPettedUntil(Date.now() + 2500);
         openPopover(AgentsPopover);
